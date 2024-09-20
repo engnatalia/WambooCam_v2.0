@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Natalia Molinero Mingorance
+ * Copyright (c) 2024 Natalia Molinero Mingorance
  * All rights reserved.
  */
 
@@ -8,12 +8,14 @@ package harmony.valley.wamboocam
 import android.Manifest
 import android.app.*
 import android.content.*
+import android.content.ContentValues.TAG
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Matrix
 import android.net.Uri
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Environment
 import android.os.PowerManager
@@ -44,9 +46,13 @@ import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.FFmpegKitConfig
 import com.arthenica.ffmpegkit.FFprobeKit
 import com.arthenica.ffmpegkit.MediaInformationSession
+import com.github.mikephil.charting.BuildConfig
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.MobileAds
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.ump.*
 import harmony.valley.wamboocam.databinding.FragmentHomeBinding
 import harmony.valley.wamboocam.workers.ForegroundWorker
@@ -62,6 +68,7 @@ import com.google.android.ump.ConsentInformation.OnConsentInfoUpdateSuccessListe
 
 private const val REQUEST_PICK_VIDEO = 1
 private const val REQUEST_PICK_IMAGE = 1
+private const val UPDATE_REQUEST_CODE = 1001
 
 @Suppress("DEPRECATION")
 class HomeFragment : Fragment() {
@@ -156,6 +163,13 @@ class HomeFragment : Fragment() {
                     // VideoView, Start the VideoView to play that video
                     binding.videoView2.start()
                     binding.videoView2.isVisible=true
+
+
+                    // Check if the video is corrupted
+                    //if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+
+                    checkVideoCorruption(requireContext(), Uri.parse(compressedFilePath))
+                    //}
                     if (videoResolution == videoResolutionInit) {
                         binding.quality.text =""
                         binding.quality.visibility= View.VISIBLE
@@ -182,6 +196,7 @@ class HomeFragment : Fragment() {
                         binding.checkboxQuality.visibility= View.GONE
                         binding.quality.text =""
                     }
+
                 }
             }
 
@@ -213,7 +228,85 @@ class HomeFragment : Fragment() {
             }
         }
     }
+    private fun checkVideoCorruption(context: Context, filePath: Uri) {
+        if (filePath != null) {
 
+            val mediaInformationSession  = FFprobeKit.getMediaInformation(
+                FFmpegKitConfig.getSafParameterForRead(
+                    activity,
+                    filePath
+                )
+            )
+
+            videoWidth = mediaInformation.mediaInformation.streams[0].width.toString()
+            videoHeight = mediaInformation.mediaInformation.streams[0].height.toString()
+            // Check that the session was successful and get info from the video
+            if (mediaInformationSession != null  ) {
+                val mediaInformation = mediaInformationSession.mediaInformation
+                val streams = mediaInformation?.streams
+
+                if (streams != null) {
+                    // Iterate the streams to find the one with "codec_type = video"
+                    for (stream in streams) {
+
+                        if (stream.getStringProperty("codec_type") == "video") {
+                            // Get the coded_width
+                            val codedWidth = stream.getStringProperty("coded_width")
+                            val codedHeight = stream.getStringProperty("coded_height")
+                            if (codedWidth != null) {
+                                Log.d("VideoInfo", "Coded Width: $codedWidth")
+                                Log.d("VideoInfo", "Coded Height: $codedHeight")
+                                // Compare coded_width with the width selected for the compression
+                                if (codedWidth == videoWidth || codedWidth == videoHeight) {
+                                    Log.d("Comparison", "La resolución coincide con la seleccionada.")
+
+                                } else {
+                                    Log.d(
+                                        "Comparison",
+                                        "La resolución no coincide con la seleccionada."
+                                    )
+                                    val codecName = stream.getStringProperty("codec_name")
+                                    val codedWidth = codedWidth?.toIntOrNull() ?: 0
+                                    val videoWidth = videoWidth?.toIntOrNull() ?: 0
+                                    val alertMessage = getString(
+                                        R.string.video_resolution_mismatch,
+                                        codedWidth,
+                                        videoWidth
+                                    )
+                                    AlertDialog.Builder(requireActivity()).apply {
+                                        setTitle(getString(R.string.corrupted_video))
+                                        setMessage(alertMessage)
+                                        setPositiveButton("OK") { _, _ -> }
+                                        setCancelable(false)
+                                    }.create().show()
+                                    // If codec is H.265, suggest to change to H.264
+                                    if (codecName == "hevc") {
+                                        val alertMessage = getString(R.string.video_h265_warning)
+
+
+
+                                        AlertDialog.Builder(requireActivity()).apply {
+                                            setTitle(getString(R.string.corrupted_video))
+                                            setMessage(alertMessage)
+                                            setPositiveButton("OK") { _, _ -> }
+                                            setCancelable(false)
+                                        }.create().show()
+                                    }
+                                }
+                            } else {
+                                Log.e("VideoInfo", "Coded Width no encontrado.")
+                            }
+                            break // End the loop once the stream is found
+                        }
+                    }
+                } else {
+                    Log.e("MediaInformation", "No se encontraron streams en la información del video.")
+                }
+            } else {
+                Log.e("FFprobeKit", "Error al obtener la información del video.")
+            }
+        }
+    }
     private fun calculateQuality() {
         if (activity != null && videoUrl != null && compressedFilePath.isNotEmpty()) {
             binding.quality.visibility = View.GONE
@@ -221,7 +314,6 @@ class HomeFragment : Fragment() {
             binding.checkboxQuality.visibility = View.GONE
             binding.quality.text = ""
 
-            // Check the FFmpeg command
             val command2 = "-i ${
                 FFmpegKitConfig.getSafParameterForRead(
                     activity,
@@ -233,70 +325,55 @@ class HomeFragment : Fragment() {
                     Uri.parse(compressedFilePath)
                 )
             } -lavfi \"ssim;[0:v][1:v]psnr\" -f null -"
-            Log.d(ContentValues.TAG, "Comando FFmpeg: $command2")
 
-            // Show a proggress message
+            Log.d(TAG, "Comando FFmpeg: $command2")
+
             Toast.makeText(
                 context,
                 Html.fromHtml("<font color='red' ><b>" + getString(R.string.quality_progress) + "</b></font>"),
                 Toast.LENGTH_SHORT
             ).show()
 
-            try {
-                // Run the FFmpeg command
-                val hola = FFmpegKit.execute(command2)
-
-                // Verificar los logs de FFmpeg
-                val indexSsim = hola.logs.size
-                val ssimLine = hola.logs.get(indexSsim - 2)
-                val ssim = ssimLine.message.substringAfter("All:").substringBefore("(")
-                val quality: Double
-                val msg1: String
-                if (ssim.contains("0.")) {
-                    quality = ((1 - ssim.toDouble()) * 100).toBigDecimal().setScale(
-                        2,
-                        RoundingMode.UP
-                    ).toDouble()
-                    binding.quality.text = buildString {
-                        append(quality.toString())
-                        append("%")
+            // We use AsyncTask to run the command in a background thread
+            object : AsyncTask<Void, Void, Double?>() {
+                override fun doInBackground(vararg params: Void?): Double? {
+                    return try {
+                        val hola = FFmpegKit.execute(command2)
+                        val indexSsim = hola.logs.size
+                        val ssimLine = hola.logs.get(indexSsim - 2)
+                        val ssim = ssimLine.message.substringAfter("All:").substringBefore("(")
+                        if (ssim.contains("0.")) {
+                            (1 - ssim.toDouble()) * 100
+                        } else null
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error al ejecutar FFmpeg: ${e.message}", e)
+                        null
                     }
-                    msg1 = getString(R.string.quality_completed) + " " + quality.toString() + "%"
-                } else {
-                    binding.quality.text = getString(R.string.poor_quality)
-                    msg1 = getString(R.string.poor_quality)
-                }
-                AlertDialog.Builder(requireActivity()).apply {
-                    setMessage(msg1).setPositiveButton("OK") { _, _ -> (requireActivity()) }
-                }.create().show()
-                binding.quality.visibility = View.VISIBLE
-                binding.qualityDescription.visibility = View.VISIBLE
-                binding.checkboxQuality.visibility = View.VISIBLE
-            } catch (e: Exception) {
-                // Handle the FFmpeg running errors
-                Log.e(ContentValues.TAG, "Error al ejecutar FFmpeg: ${e.message}", e)
-
-                // Mostrar un mensaje de error
-                val msg1 = getString(R.string.quality_error)
-                val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:contact.harmonyvalley@gmail.com")
-                    putExtra(Intent.EXTRA_SUBJECT, "Quality Error")
-                    putExtra(Intent.EXTRA_TEXT, msg1)
                 }
 
-                AlertDialog.Builder(requireActivity()).apply {
-                    setMessage(msg1)
-                    setPositiveButton("OK") { _, _ ->
-                        // Try to open the mail app
-                        try {
-                            startActivity(emailIntent)
-                        } catch (e: Exception) {
-                            // If mail app can't open, show a message
-                            Toast.makeText(context, R.string.quality_error, Toast.LENGTH_SHORT).show()
-                        }
+                override fun onPostExecute(result: Double?) {
+                    if (result != null) {
+                        val quality = result.toBigDecimal().setScale(2, RoundingMode.UP).toDouble()
+                        binding.quality.text = "$quality%"
+                        AlertDialog.Builder(requireActivity()).apply {
+                            setMessage(getString(R.string.quality_completed) + " " + quality + "%")
+                            setPositiveButton("OK") { _, _ -> }
+                            setCancelable(false)
+                        }.create().show()
+                    } else {
+                        binding.quality.text = getString(R.string.poor_quality)
+                        AlertDialog.Builder(requireActivity()).apply {
+                            setMessage(getString(R.string.poor_quality))
+                            setPositiveButton("OK") { _, _ -> }
+                            setCancelable(false)
+                        }.create().show()
                     }
-                }.create().show()
-            }
+
+                    binding.quality.visibility = View.VISIBLE
+                    binding.qualityDescription.visibility = View.VISIBLE
+                    binding.checkboxQuality.visibility = View.VISIBLE
+                }
+            }.execute()
         } else {
             // Handle if activity, videoUrl o compressedFilePath rare null of empty
             val msg1 = getString(R.string.quality_error)
@@ -318,6 +395,34 @@ class HomeFragment : Fragment() {
                     }
                 }
             }.create().show()
+        }
+    }
+
+    private fun checkForInAppUpdate() {
+        // Create an AppUpdateManager instance
+        val appUpdateManager = AppUpdateManagerFactory.create(requireActivity())
+        // Get info about the available update
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+            Log.d("InAppUpdate", "Update info received: ${appUpdateInfo.updateAvailability()}")
+            // Check if there is an available update and if the type is allowed
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+                appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                Log.d("InAppUpdate", "Update available and allowed")
+
+                // Initiate the update process
+                appUpdateManager.startUpdateFlowForResult(
+                    appUpdateInfo,
+                    AppUpdateType.IMMEDIATE,
+                    requireActivity(),
+                    UPDATE_REQUEST_CODE
+                )
+            } else {
+                Log.d("InAppUpdate", "No update available or not allowed")
+            }
+        }.addOnFailureListener { exception ->
+            Log.e("InAppUpdate", "Failed to check for updates", exception)
+
         }
     }
     private fun showStats(
@@ -350,7 +455,8 @@ class HomeFragment : Fragment() {
                 binding.videoView.visibility = View.GONE
                 binding.deleteVideo.visibility = View.GONE
                 binding.videoView2.visibility = View.VISIBLE
-                binding.videoView2.start()}
+                binding.videoView2.start()
+                }
             else -> {
                 binding.videoView.visibility = View.VISIBLE
                 hideInitInfo()
@@ -358,6 +464,7 @@ class HomeFragment : Fragment() {
                 binding.deleteVideo.visibility = View.VISIBLE
                 binding.videoView.start()
                 binding.videoView2.start()
+
             }
         }
 
@@ -443,17 +550,25 @@ class HomeFragment : Fragment() {
         savedInstanceState?.let {
             videoUrl = it.getParcelable("videoUrl")
         }
+
         binding = FragmentHomeBinding.inflate(inflater, container, false)
         pref = requireActivity().getSharedPreferences(
             requireActivity().packageName, Context.MODE_PRIVATE
         )
         editor = pref.edit()
 
+        // Progress receiver register
         requireContext().registerReceiver(
-            videoCompressionProgressReceiver, IntentFilter(Constants.WORK_PROGRESS_ACTION)
+            videoCompressionProgressReceiver,
+            IntentFilter(Constants.WORK_PROGRESS_ACTION),
+            Context.RECEIVER_EXPORTED
         )
+
+// Finalization receiver register
         requireContext().registerReceiver(
-            videoCompressionCompletedReceiver, IntentFilter(Constants.WORK_COMPLETED_ACTION)
+            videoCompressionCompletedReceiver,
+            IntentFilter(Constants.WORK_COMPLETED_ACTION),
+            Context.RECEIVER_EXPORTED
         )
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
@@ -477,6 +592,9 @@ class HomeFragment : Fragment() {
 
         return binding.root
     }
+
+
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
@@ -536,6 +654,7 @@ class HomeFragment : Fragment() {
         if (view != null) {
             super.onViewCreated(view, savedInstanceState)
             super.onViewCreated(view, savedInstanceState)
+            checkForInAppUpdate()
             // Set tag for under age of consent. false means users are not under age.
             val params = ConsentRequestParameters.Builder()
                 .setTagForUnderAgeOfConsent(false)
@@ -1059,6 +1178,7 @@ class HomeFragment : Fragment() {
                 if (videoView.isPlaying) {
                     videoView.pause()
                 }
+
                 if (videoView2.isPlaying) {
                     videoView2.pause()
                 }
@@ -1805,6 +1925,7 @@ class HomeFragment : Fragment() {
                         getString(R.string.selected_codec) + " " + showCodec,
                         Toast.LENGTH_SHORT
                     ).show()
+
                     }
                 }
 
@@ -1819,6 +1940,7 @@ class HomeFragment : Fragment() {
         return binding.spinner4
 
     }
+
     private fun visibleViews() {
 
         with(binding) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Natalia Molinero Mingorance
+ * Copyright (c) 2024 Natalia Molinero Mingorance
  * All rights reserved.
  */
 
@@ -9,15 +9,18 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.*
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.FFmpegKitConfig
 import com.arthenica.ffmpegkit.FFprobeKit
@@ -41,6 +44,7 @@ class VideoCompressionService : Service() {
     private lateinit var notificationManager: NotificationManager
     private lateinit var builder2: NotificationCompat.Builder
     private var wakeLock: PowerManager.WakeLock? = null
+
     @Inject
     lateinit var compressRepo: CompressRepository
     private var libx="libx265"
@@ -82,15 +86,17 @@ class VideoCompressionService : Service() {
         notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val channel =
-            NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-        channel.setShowBadge(false)
-        channel.setSound(null, null)
-        notificationManager.createNotificationChannel(channel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel =
+                NotificationChannel(
+                    CHANNEL_ID,
+                    CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
+            channel.setShowBadge(false)
+            channel.setSound(null, null)
+            notificationManager.createNotificationChannel(channel)
+        }
 
         pref = getSharedPreferences(packageName, Context.MODE_PRIVATE)
 
