@@ -13,8 +13,8 @@ android {
         applicationId "harmony.valley.wamboocam"
         minSdk 30
         targetSdk 34
-        versionCode 8
-        versionName "1.7"
+        versionCode 9
+        versionName "2.0"
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
