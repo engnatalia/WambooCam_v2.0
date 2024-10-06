@@ -389,6 +389,8 @@ class VideoCompressionService : Service() {
                 val intent2 = Intent(Constants.WORK_PROGRESS_ACTION)
                 intent2.putExtra(HomeFragment.RETURN_CODE, returnCode.toString())
                 intent2.putExtra("percentage", msg3)
+                intent2.putExtra(HomeFragment.URI_PATH, uriPath.toString())
+
                 sendBroadcast(intent2)
             }
         )

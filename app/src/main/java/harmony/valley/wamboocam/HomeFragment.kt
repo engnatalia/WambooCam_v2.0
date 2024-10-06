@@ -65,6 +65,7 @@ import java.util.*
 import kotlin.math.round
 import com.google.android.ump.ConsentInformation.OnConsentInfoUpdateFailureListener
 import com.google.android.ump.ConsentInformation.OnConsentInfoUpdateSuccessListener
+import kotlin.system.exitProcess
 
 private const val REQUEST_PICK_VIDEO = 1
 private const val REQUEST_PICK_IMAGE = 1
@@ -156,6 +157,7 @@ class HomeFragment : Fragment() {
                 if (compressedFilePath != intent.getStringExtra(URI_PATH)){
 
                     compressedFilePath = intent.getStringExtra(URI_PATH).toString()
+                }
                     binding.videoView2.setVideoURI(Uri.parse(compressedFilePath))
 
                     // after successful retrieval of the video and properly
@@ -197,7 +199,7 @@ class HomeFragment : Fragment() {
                         binding.quality.text =""
                     }
 
-                }
+
             }
 
         }
@@ -207,6 +209,7 @@ class HomeFragment : Fragment() {
         override fun onReceive(context: Context?, intent: Intent?) {
 
             if (intent?.action == Constants.WORK_PROGRESS_ACTION) {
+                compressedFilePath = intent.getStringExtra(URI_PATH).toString()
 
                 // Do something when the WorkManager completes its work
                 // For example, update UI, show a notification, etc.
@@ -782,10 +785,72 @@ class HomeFragment : Fragment() {
         val dialogView = inflater.inflate(R.layout.progress_dialog_layout, null)
         builder.setView(dialogView)
         builder.setCancelable(false)
+            .setCancelable(true)
+            .setNegativeButton(getString(R.string.cancel_compression)) { dialog, which ->
+                progressDialog.dismiss()
+                deleteVideo()
+                restartApp(requireContext())
+            }
         progressDialog = builder.create()
 
     }
+    fun deleteVideo() {
+        val compressedVideoFilePath = getRealPathFromURI(requireContext(), Uri.parse(compressedFilePath))
 
+        if (compressedVideoFilePath != null) {
+            val compressedVideoFile = File(compressedVideoFilePath)
+
+            if (compressedVideoFile.exists()) {
+                val deleted = compressedVideoFile.delete()
+                if (deleted) {
+                    Log.d("DeleteVideo", "El archivo de video comprimido ha sido eliminado.")
+                } else {
+                    Log.e("DeleteVideo", "Error al eliminar el archivo de video.")
+                }
+            } else {
+                Log.d("DeleteVideo", "El archivo de video comprimido no existe.")
+            }
+        } else {
+            Log.e("DeleteVideo", "No se pudo obtener la ruta real del archivo desde la URI.")
+        }
+    }
+
+    fun getRealPathFromURI(context: Context, uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                    result = it.getString(columnIndex)
+                }
+            }
+        } else if (uri.scheme == "file") {
+            result = uri.path
+        }
+        return result
+    }
+
+    fun restartApp(context: Context) {
+        // Create an intent to restart the app
+
+
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        }
+
+        // Make sure the intent is not null
+        if (intent != null) {
+
+            context.startActivity(intent)
+        } else {
+            // Handle if the inten is null (very unlikely)
+            Log.e("RestartApp", "Intent was null, unable to restart app.")
+        }
+
+        // End all the previous activities and exit the app
+        exitProcess(0)
+    }
     private fun loadAd() {
         MobileAds.initialize(requireActivity()) {}
         val adRequest = AdRequest.Builder().build()
