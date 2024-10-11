@@ -4,17 +4,23 @@
     <shared>
       <config />
     </shared>
+    <layouts>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml">
+        <config>
+          <theme>@style/Theme.WambooCamApplication</theme>
+        </config>
+      </layout>
+    </layouts>
   </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1113e1c0-f91c-400d-b4e1-439eff784561" name="Changes" comment="new version 2.0 created">
+    <list default="true" id="1113e1c0-f91c-400d-b4e1-439eff784561" name="Changes" comment="added functionality to stop compression (and deleted the non completely compressed video)">
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/rounded_media_controller.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/services/VideoCompressionService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/services/VideoCompressionService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,7 +79,7 @@
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/HV_v2/Apps/Wamboo Cam/v2.0/WambooCam_v2.0&quot;
+    &quot;last_opened_file_path&quot;: &quot;D:/HV_v2/Apps/Wamboo Cam/v2.0/WambooCam_v2.0/app/src/main/res/drawable&quot;
   },
   &quot;keyToStringList&quot;: {
     &quot;ExportApk.BuildVariants&quot;: [
@@ -86,6 +92,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\HV_v2\Apps\Wamboo Cam\v2.0\WambooCam_v2.0\app\src\main\res\drawable" />
       <recent name="D:\HV\Papers\GOAL 1\Paper 4\Wamboo Cam\v1.4\WambooCam_v1.4" />
       <recent name="C:\Users\matlab\Documents\HV\Papers\GOAL 1\Paper 4\Wamboo Cam\v1\WambooCam_v1.0\app\src\main" />
       <recent name="C:\Users\matlab\Documents\HV\Papers\GOAL 1\Paper 4\Wamboo Cam\v1\WambooCam_v1.0\app\src\main\res\drawable" />
@@ -408,7 +415,15 @@
       <option name="project" value="LOCAL" />
       <updated>1727753174329</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="added functionality to stop compression (and deleted the non completely compressed video)">
+      <option name="closed" value="true" />
+      <created>1728195816606</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1728195816606</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -423,7 +438,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="obtained and displayed initial and final image sizes, difference % and min pollution avoided" />
     <MESSAGE value="corrected resolution calculation when camera is rotated" />
     <MESSAGE value="changed compressed video name to be consistent with Image name" />
     <MESSAGE value="ads added and maximum number of warnings removed" />
@@ -448,24 +462,25 @@
     <MESSAGE value="Corrected units in the initially estimated size." />
     <MESSAGE value="changes to support up to Android 14, improved detection of corrupted file (h265),improved calculateQuality and background activities" />
     <MESSAGE value="new version 2.0 created" />
-    <option name="LAST_COMMIT_MESSAGE" value="new version 2.0 created" />
+    <MESSAGE value="added functionality to stop compression (and deleted the non completely compressed video)" />
+    <option name="LAST_COMMIT_MESSAGE" value="added functionality to stop compression (and deleted the non completely compressed video)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>259</line>
+          <line>292</line>
           <option name="timeStamp" value="32" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>263</line>
+          <line>296</line>
           <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>278</line>
+          <line>311</line>
           <properties>
             <option name="lambda-ordinal" value="-1" />
           </properties>
@@ -473,17 +488,17 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>299</line>
+          <line>332</line>
           <option name="timeStamp" value="35" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>244</line>
+          <line>277</line>
           <option name="timeStamp" value="74" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>172</line>
+          <line>205</line>
           <option name="timeStamp" value="75" />
         </line-breakpoint>
       </breakpoints>

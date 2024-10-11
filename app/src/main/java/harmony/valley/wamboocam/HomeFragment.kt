@@ -54,6 +54,8 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.ump.*
+import android.os.Handler
+import android.os.Looper
 import harmony.valley.wamboocam.databinding.FragmentHomeBinding
 import harmony.valley.wamboocam.workers.ForegroundWorker
 import harmony.valley.wamboocam.workers.VideoCompressionWorker
@@ -83,6 +85,7 @@ class HomeFragment : Fragment() {
     private var formatsSpinner=arrayOf("")
     private var formatsValues=arrayOf("")
     private var spinner6:Spinner?=null
+
     private lateinit var pref: SharedPreferences
     private lateinit var editor: SharedPreferences.Editor
     private lateinit var mediaInformation : MediaInformationSession
@@ -100,6 +103,7 @@ class HomeFragment : Fragment() {
     private var  videoCodec =""
     private var  compressSpeed =""
     private lateinit var videoView: VideoView
+    private lateinit var videoView1: VideoView
     private lateinit var videoView2: VideoView
     private lateinit var imageView: ImageView
     private lateinit var imageView2: ImageView
@@ -163,8 +167,37 @@ class HomeFragment : Fragment() {
                     // after successful retrieval of the video and properly
                     // setting up the retried video uri in
                     // VideoView, Start the VideoView to play that video
+                binding.videoView2.setVideoURI(Uri.parse(compressedFilePath))
+
+
+
+                // Configure VideoView and make the controls visible when it's ready
+                binding.videoView2.visibility = View.VISIBLE
+
+                // Listener to know when the video is ready to play
+                binding.videoView2.setOnPreparedListener {
+
+                    val mediaController2 = MediaController(requireActivity())
+
+                    mediaController2.setAnchorView(binding.videoView2)
+
+                    mediaController2.scaleY = 0.5f  // vertical scale, 0.5 times its original size
+                    mediaController2.scaleX = 0.5f  // horizontal scale, 0.5 times its original size
+
+
+                    // Apply customized background
+                    mediaController2.setBackgroundResource(R.drawable.rounded_media_controller)
+
+                    binding.videoView2.setMediaController(mediaController2)
                     binding.videoView2.start()
-                    binding.videoView2.isVisible=true
+                    mediaController2.show(0)
+                    // Forze MediaController disappear after 3 seconds (3000 ms)
+
+                    val handler = Handler(Looper.getMainLooper())
+                    handler.postDelayed({
+                        mediaController2.hide()  // Hide MediaController after 3 seconds
+                    }, 3000)  // Timne in miliseconds
+                }
 
 
                     // Check if the video is corrupted
@@ -441,6 +474,7 @@ class HomeFragment : Fragment() {
         //showing stats data in the textviews
         if (!showView){
             binding.videoView.visibility = View.GONE
+            binding.videoView1.visibility = View.GONE
             binding.deleteVideo.visibility = View.GONE
             binding.videoView2.visibility = View.GONE
             binding.spinner.visibility = View.GONE
@@ -455,18 +489,92 @@ class HomeFragment : Fragment() {
         }
         when (videoUrl) {
             null -> {
-                binding.videoView.visibility = View.GONE
+                binding.videoView1.visibility = View.GONE
                 binding.deleteVideo.visibility = View.GONE
+                // Configure VideoView and make the controls visible when it's ready
                 binding.videoView2.visibility = View.VISIBLE
-                binding.videoView2.start()
+
+                // Listener to know when the video is ready to play
+                binding.videoView2.setOnPreparedListener {
+
+                    val mediaController2 = MediaController(requireActivity())
+
+                    mediaController2.setAnchorView(binding.videoView2)
+
+                    mediaController2.scaleY = 0.5f  // vertical scale, 0.5 times its original size
+                    mediaController2.scaleX = 0.5f  // horizontal scale, 0.5 times its original size
+
+
+                    // Apply customized background
+                    mediaController2.setBackgroundResource(R.drawable.rounded_media_controller)
+
+                    binding.videoView2.setMediaController(mediaController2)
+                    binding.videoView2.start()
+                    mediaController2.show(0)
+                    // Forze MediaController disappear after 3 seconds (3000 ms)
+
+                    val handler = Handler(Looper.getMainLooper())
+                    handler.postDelayed({
+                        mediaController2.hide()  // Hide MediaController after 3 seconds
+                    }, 3000)  // Timne in miliseconds
+                }
                 }
             else -> {
-                binding.videoView.visibility = View.VISIBLE
-                hideInitInfo()
-                binding.videoView2.visibility = View.VISIBLE
                 binding.deleteVideo.visibility = View.VISIBLE
-                binding.videoView.start()
-                binding.videoView2.start()
+                // Configure VideoView and make the controls visible when it's ready
+                binding.videoView1.visibility = View.VISIBLE
+
+                // Listener to know when the video is ready to play
+                binding.videoView1.setOnPreparedListener {
+
+                    val mediaController1 = MediaController(requireActivity())
+
+                    mediaController1.setAnchorView(binding.videoView1)
+
+                    mediaController1.scaleY = 0.5f  // vertical scale, 0.5 times its original size
+                    mediaController1.scaleX = 0.5f  // horizontal scale, 0.5 times its original size
+
+
+                    // Apply customized background
+                    mediaController1.setBackgroundResource(R.drawable.rounded_media_controller)
+
+                    binding.videoView1.setMediaController(mediaController1)
+                    binding.videoView1.start()
+                    mediaController1.show(0)
+                    // Forze MediaController disappear after 3 seconds (3000 ms)
+
+                    val handler = Handler(Looper.getMainLooper())
+                    handler.postDelayed({
+                        mediaController1.hide()  // Hide MediaController after 3 seconds
+                    }, 3000)  // Timne in miliseconds
+                }
+                // Configure VideoView and make the controls visible when it's ready
+                binding.videoView2.visibility = View.VISIBLE
+
+                // Listener to know when the video is ready to play
+                binding.videoView2.setOnPreparedListener {
+
+                    val mediaController2 = MediaController(requireActivity())
+
+                    mediaController2.setAnchorView(binding.videoView2)
+
+                    mediaController2.scaleY = 0.5f  // vertical scale, 0.5 times its original size
+                    mediaController2.scaleX = 0.5f  // horizontal scale, 0.5 times its original size
+
+
+                    // Apply customized background
+                    mediaController2.setBackgroundResource(R.drawable.rounded_media_controller)
+
+                    binding.videoView2.setMediaController(mediaController2)
+                    binding.videoView2.start()
+                    mediaController2.show(0)
+                    // Forze MediaController disappear after 3 seconds (3000 ms)
+
+                    val handler = Handler(Looper.getMainLooper())
+                    handler.postDelayed({
+                        mediaController2.hide()  // Hide MediaController after 3 seconds
+                    }, 3000)  // Timne in miliseconds
+                }
 
             }
         }
@@ -688,8 +796,7 @@ class HomeFragment : Fragment() {
         //checkVideosPermission()
         //checkWritingPermission()
         initUI()
-
-        videoView = binding.root.findViewById(R.id.videoView)
+        videoView1 = binding.root.findViewById(R.id.videoView1)
         videoView2 = binding.root.findViewById(R.id.videoView2)
         imageView = binding.root.findViewById(R.id.imageView)
         imageView2 = binding.root.findViewById(R.id.imageView2)
@@ -1026,7 +1133,6 @@ class HomeFragment : Fragment() {
                             .setStream(finalPhotoUri)
                             .setType("image/jpeg")
                             .setChooserTitle(getString(R.string.share_compressed_image)).startChooser()
-                        //binding.videoView.visibility = View.GONE
 
                     }
 
@@ -1048,11 +1154,13 @@ class HomeFragment : Fragment() {
 
         when (videoUrl) {
             null -> {
-                binding.videoView.visibility = View.GONE
+                binding.videoView1.visibility = View.GONE
+
 
             }
         }// Setting media controller to the video . So the user can pause and play the video . They will appear when user tap on video
         videoView.setMediaController(MediaController(requireActivity()))
+        videoView1.setMediaController(MediaController(requireActivity()))
         videoView2.setMediaController(MediaController(requireActivity()))
         checkboxAudio.setOnCheckedChangeListener { checkboxAudio, _ ->
             val checked: Boolean = checkboxAudio.isChecked
@@ -1243,7 +1351,9 @@ class HomeFragment : Fragment() {
                 if (videoView.isPlaying) {
                     videoView.pause()
                 }
-
+                if (videoView1.isPlaying) {
+                    videoView1.pause()
+                }
                 if (videoView2.isPlaying) {
                     videoView2.pause()
                 }
@@ -1272,7 +1382,7 @@ class HomeFragment : Fragment() {
 
                 // If picked video is null or video is not picked
                 binding.videoView.visibility = View.GONE
-
+                binding.videoView1.visibility = View.GONE
                 binding.videoView2.visibility = View.GONE
                 Toast.makeText(
                     context,
@@ -1289,8 +1399,7 @@ class HomeFragment : Fragment() {
                 .setStream(Uri.parse(compressedFilePath))
                 .setType("video/" + selectedformat)
                 .setChooserTitle(getString(R.string.share_compressed_video)).startChooser()
-            //binding.videoView.visibility = View.GONE
-
+            binding.videoView.visibility = View.GONE
         }
 
         binding.deleteVideo.setOnClickListener {
@@ -1637,6 +1746,7 @@ class HomeFragment : Fragment() {
             statsContainer.isVisible = false
             statsContainer2.isVisible = false
             videoView.isVisible = false
+            videoView1.isVisible = false
             videoView2.isVisible = false
             checkboxAudio.isVisible=false
             shareVideo.isVisible=false
@@ -1868,7 +1978,7 @@ class HomeFragment : Fragment() {
         when (videoUrl) {
             null -> {
                 binding.videoView.visibility = View.GONE
-
+                binding.videoView1.visibility = View.GONE
                 Toast.makeText(context, Html.fromHtml("<font color='red' ><b>" +getString(R.string.capture_video)+ "</b></font>"), Toast.LENGTH_SHORT).show()
 
 
@@ -2011,11 +2121,10 @@ class HomeFragment : Fragment() {
         with(binding) {
             captureVideo.isVisible = true
             captureImage.isVisible = true
-            //videoView.isVisible = true
-            //spinner.isVisible=true
             checkboxAudio.isVisible=true
             compressVideo.isVisible = true
-            videoView.visibility = View.GONE
+            videoView.isVisible = true
+            videoView1.visibility = View.GONE
             videoView2.visibility = View.GONE
             spinner.visibility = View.GONE
             spinner5.visibility = View.GONE
@@ -2185,8 +2294,31 @@ If there is an error in the process, an error message is displayed to the user v
                 val data: Intent? = result.data
                 val videoUri: Uri? = result.data?.data
                 videoUri?.let {
-                    videoView.setVideoURI(it)
-                    videoView.start()
+                    videoView1.setVideoURI(it)
+                    // Listener to know when the video is ready to play
+                    binding.videoView1.setOnPreparedListener {
+
+                        val mediaController1 = MediaController(requireActivity())
+
+                        mediaController1.setAnchorView(binding.videoView1)
+
+                        mediaController1.scaleY = 0.5f  // vertical scale, 0.5 times its original size
+                        mediaController1.scaleX = 0.5f  // horizontal scale, 0.5 times its original size
+
+
+                        // Apply customized background
+                        mediaController1.setBackgroundResource(R.drawable.rounded_media_controller)
+
+                        binding.videoView1.setMediaController(mediaController1)
+                        binding.videoView1.start()
+                        mediaController1.show(0)
+                        // Forze MediaController disappear after 3 seconds (3000 ms)
+
+                        val handler = Handler(Looper.getMainLooper())
+                        handler.postDelayed({
+                            mediaController1.hide()  // Hide MediaController after 3 seconds
+                        }, 3000)  // Timne in miliseconds
+                    }
                     binding.spinner.isVisible = true
                     binding.spinner5.isVisible = true
 
@@ -2250,7 +2382,30 @@ If there is an error in the process, an error message is displayed to the user v
                         // after successful retrieval of the video and properly
                         // setting up the retried video uri in
                         // VideoView, Start the VideoView to play that video
-                        binding.videoView.start()
+                        // Listener to know when the video is ready to play
+                        binding.videoView.setOnPreparedListener {
+
+                            val mediaController = MediaController(requireActivity())
+
+                            mediaController.setAnchorView(binding.videoView)
+
+                            mediaController.scaleY = 0.5f  // vertical scale, 0.5 times its original size
+                            mediaController.scaleX = 0.5f  // horizontal scale, 0.5 times its original size
+
+
+                            // Apply customized background
+                            mediaController.setBackgroundResource(R.drawable.rounded_media_controller)
+
+                            binding.videoView.setMediaController(mediaController)
+                            binding.videoView.start()
+                            mediaController.show(0)
+                            // Forze MediaController disappear after 3 seconds (3000 ms)
+
+                            val handler = Handler(Looper.getMainLooper())
+                            handler.postDelayed({
+                                mediaController.hide()  // Hide MediaController after 3 seconds
+                            }, 3000)  // Timne in miliseconds
+                        }
                         initialSize = fileSize(videoUrl!!.length(requireActivity().contentResolver))
 
                         var initS=0.0
