@@ -16,11 +16,14 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1113e1c0-f91c-400d-b4e1-439eff784561" name="Changes" comment="added functionality to stop compression (and deleted the non completely compressed video)">
-      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/rounded_media_controller.xml" afterDir="false" />
+    <list default="true" id="1113e1c0-f91c-400d-b4e1-439eff784561" name="Changes" comment="changed videos mediaController's look and functionality">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_home.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/services/VideoCompressionService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/services/VideoCompressionService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/workers/ForegroundWorker.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/workers/ForegroundWorker.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/workers/VideoCompressionWorker.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/workers/VideoCompressionWorker.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,36 +63,36 @@
   <component name="ProjectViewState">
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Android App.app.executor&quot;: &quot;Run&quot;,
-    &quot;BundleExportedModule&quot;: &quot;EcoCam.app&quot;,
-    &quot;DEBUGGABLE_DEVICE&quot;: &quot;samsung-sm_g998b-R5CRB314NDL&quot;,
-    &quot;DEBUGGABLE_PROCESS&quot;: &quot;harmony.valley.wamboocam&quot;,
-    &quot;DEBUGGER_ID&quot;: &quot;Auto&quot;,
-    &quot;ExportBundle.BundlePathForEcoCam.app&quot;: &quot;D:\\HV\\Papers\\GOAL 1\\Paper 4\\Wamboo Cam\\v1.6&quot;,
-    &quot;Logcat.SavePath&quot;: &quot;D:\\HV\\Papers\\GOAL 1\\Paper 4\\Wamboo Cam\\v1.7\\WambooCam_v1.7&quot;,
-    &quot;ResourceManagerPrefKey.ModuleName&quot;: &quot;EcoCam.app.main&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;SHOW_ALL_PROCESSES&quot;: &quot;false&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/HV_v2/Apps/Wamboo Cam/v2.0/WambooCam_v2.0/app/src/main/res/drawable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Android App.app.executor": "Debug",
+    "BundleExportedModule": "EcoCam.app",
+    "DEBUGGABLE_DEVICE": "samsung-sm_g998b-R5CRB314NDL",
+    "DEBUGGABLE_PROCESS": "harmony.valley.wamboocam",
+    "DEBUGGER_ID": "Auto",
+    "ExportBundle.BundlePathForEcoCam.app": "D:\\HV\\Papers\\GOAL 1\\Paper 4\\Wamboo Cam\\v1.6",
+    "Logcat.SavePath": "D:\\HV\\Papers\\GOAL 1\\Paper 4\\Wamboo Cam\\v1.7\\WambooCam_v1.7",
+    "ResourceManagerPrefKey.ModuleName": "EcoCam.app.main",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHOW_ALL_PROCESSES": "false",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/HV_v2/Apps/Wamboo Cam/v2.0/WambooCam_v2.0/app/src/main/res/drawable"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;ExportApk.BuildVariants&quot;: [
-      &quot;release&quot;
+  "keyToStringList": {
+    "ExportApk.BuildVariants": [
+      "release"
     ],
-    &quot;kotlin-gradle-user-dirs&quot;: [
-      &quot;C:\\Users\\matlab\\.gradle&quot;
+    "kotlin-gradle-user-dirs": [
+      "C:\\Users\\matlab\\.gradle"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\HV_v2\Apps\Wamboo Cam\v2.0\WambooCam_v2.0\app\src\main\res\drawable" />
@@ -423,7 +426,15 @@
       <option name="project" value="LOCAL" />
       <updated>1728195816606</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="changed videos mediaController's look and functionality">
+      <option name="closed" value="true" />
+      <created>1728613468586</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1728613468586</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -438,7 +449,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="corrected resolution calculation when camera is rotated" />
     <MESSAGE value="changed compressed video name to be consistent with Image name" />
     <MESSAGE value="ads added and maximum number of warnings removed" />
     <MESSAGE value="corrected some errors" />
@@ -463,24 +473,25 @@
     <MESSAGE value="changes to support up to Android 14, improved detection of corrupted file (h265),improved calculateQuality and background activities" />
     <MESSAGE value="new version 2.0 created" />
     <MESSAGE value="added functionality to stop compression (and deleted the non completely compressed video)" />
-    <option name="LAST_COMMIT_MESSAGE" value="added functionality to stop compression (and deleted the non completely compressed video)" />
+    <MESSAGE value="changed videos mediaController's look and functionality" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed videos mediaController's look and functionality" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>292</line>
+          <line>296</line>
           <option name="timeStamp" value="32" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>296</line>
+          <line>300</line>
           <option name="timeStamp" value="33" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>311</line>
+          <line>315</line>
           <properties>
             <option name="lambda-ordinal" value="-1" />
           </properties>
@@ -488,18 +499,33 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>332</line>
+          <line>336</line>
           <option name="timeStamp" value="35" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>277</line>
+          <line>281</line>
           <option name="timeStamp" value="74" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
-          <line>205</line>
+          <line>209</line>
           <option name="timeStamp" value="75" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
+          <line>1326</line>
+          <option name="timeStamp" value="76" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
+          <line>1344</line>
+          <option name="timeStamp" value="77" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/app/src/main/java/harmony/valley/wamboocam/HomeFragment.kt</url>
+          <line>1090</line>
+          <option name="timeStamp" value="79" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

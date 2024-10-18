@@ -68,6 +68,7 @@ import kotlin.math.round
 import com.google.android.ump.ConsentInformation.OnConsentInfoUpdateFailureListener
 import com.google.android.ump.ConsentInformation.OnConsentInfoUpdateSuccessListener
 import kotlin.system.exitProcess
+import android.graphics.Typeface
 
 private const val REQUEST_PICK_VIDEO = 1
 private const val REQUEST_PICK_IMAGE = 1
@@ -102,6 +103,7 @@ class HomeFragment : Fragment() {
     private var  showCodec =""
     private var  videoCodec =""
     private var  compressSpeed =""
+    private var  bitrate =""
     private lateinit var videoView: VideoView
     private lateinit var videoView1: VideoView
     private lateinit var videoView2: VideoView
@@ -118,9 +120,11 @@ class HomeFragment : Fragment() {
     var  init75 = 0.0
     var init40= 0.0
     var init70= 0.0
+    var init50= 0.0
     var unidades75 = "MB"
     var unidades40 = "MB"
     var unidades70 = "MB"
+    var unidades50 = "MB"
     private var imageResolution = ""
     private var isCameraRotated = false // Initialize the rotation flag
 
@@ -1032,16 +1036,55 @@ class HomeFragment : Fragment() {
             getString(R.string.ultrafast),
             getString(R.string.good),
             getString(R.string.best),
+            getString(R.string.half),
             getString(R.string.custom_h),
             getString(R.string.custom_l)
         )
-        val arrayAdapter = ArrayAdapter(requireContext(), R.layout.spinner_row, typesSpinner)
+        val arrayAdapter = object : ArrayAdapter<String>(requireContext(), R.layout.spinner_row, typesSpinner) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getView(position, convertView, parent)
+                val textView = view as TextView
+                // Change color to the "Reduce by half" option
+                if (getItem(position) == getString(R.string.half)) {
+                    textView.setTextColor(ContextCompat.getColor(context, R.color.red))
+                } else {
+                    // Default color for the other options
+                    textView.setTextColor(ContextCompat.getColor(context, android.R.color.black))
+                }
+                // Apply bold to the "select_compression" option
+                if (getItem(position) == getString(R.string.select_compression)) {
+                    textView.setTypeface(null, Typeface.BOLD)
+                } else {
+                    textView.setTypeface(null, Typeface.NORMAL)
+                }
+                return view
+            }
+
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getDropDownView(position, convertView, parent)
+                val textView = view as TextView
+                // Change color to the "Reduce by half" option
+                if (getItem(position) == getString(R.string.half)) {
+                    textView.setTextColor(ContextCompat.getColor(context, R.color.red))
+                } else {
+                    // Default color for the other options
+                    textView.setTextColor(ContextCompat.getColor(context, android.R.color.black))
+                }
+                // Apply bold to the "select_compression" option
+                if (getItem(position) == getString(R.string.select_compression)) {
+                    textView.setTypeface(null, Typeface.BOLD)
+                } else {
+                    textView.setTypeface(null, Typeface.NORMAL)
+                }
+                return view
+            }
+        }
         spinner.adapter = arrayAdapter
 
-        spinner5.layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+//        spinner5.layoutParams = LinearLayout.LayoutParams(
+//            ViewGroup.LayoutParams.WRAP_CONTENT,
+//            ViewGroup.LayoutParams.WRAP_CONTENT
+//        )
         formatsSpinner =
             arrayOf(getString(R.string.select_format), "mp4", "avi", "mov", "mkv", "3gp")
         formatsValues = arrayOf("mp4", "mp4", "avi", "mov", "mkv", "3gp")
@@ -1280,10 +1323,37 @@ class HomeFragment : Fragment() {
                             "<b>" + init75.toBigDecimal().setScale(2, RoundingMode.UP)
                                 .toDouble() + " $unidades75" + "</b>"
                         )
-                        binding.dataTV3.text = "75% " + getString(R.string.compression)
+                        binding.dataTV3.text = "50% " + getString(R.string.compression)
+                    }
+                    getString(R.string.half) -> {
+                        val streams = mediaInformation.mediaInformation.streams
+                        var bitrateaux: Long? = null
+                        // Select video stream (normally identified as "video")
+                        for (stream in streams) {
+                            if (stream.getStringProperty("codec_type") == "video") {
+                                // Get the bitrate from the video stream
+                                bitrateaux = stream.getStringProperty("bit_rate")?.toLongOrNull()
+
+                            }
+                        }
+
+                        bitrate = (bitrateaux?.div(2)).toString()
+
+                        hideSpinner(spinner2)
+                        hideSpinner(spinner3)
+                        hideSpinner(spinner4)
+                        binding.dataTV.visibility = View.VISIBLE
+                        binding.dataTV2.visibility = View.VISIBLE
+                        binding.dataTV3.visibility = View.VISIBLE
+                        binding.dataTV.text = getString(R.string.estimated_size)
+                        binding.dataTV2.text = Html.fromHtml(
+                            "<b>" + init40.toBigDecimal().setScale(2, RoundingMode.UP)
+                                .toDouble() + " $unidades40" + "</b>"
+                        )
+                        binding.dataTV3.text = "40% " + getString(R.string.compression)
                     }
 
-                    getString(R.string.custom_h) -> {
+                        getString(R.string.custom_h) -> {
                         dataTV.isVisible = false
                         dataTV2.isVisible = false
                         dataTV3.isVisible = false
@@ -1368,7 +1438,8 @@ class HomeFragment : Fragment() {
                         .putString(ForegroundWorker.VIDEO_RESOLUTION, videoResolution)
                         .putString(ForegroundWorker.COMPRESS_SPEED, compressSpeed)
                         .putString(ForegroundWorker.VIDEO_CODEC, videoCodec)
-                        .putString(ForegroundWorker.VIDEO_AUDIO, audio).build()
+                        .putString(ForegroundWorker.VIDEO_AUDIO, audio)
+                        .putString(ForegroundWorker.BITRATE, bitrate).build()
 
                 // Create the work request
                 val myWorkRequest =
@@ -1891,7 +1962,52 @@ class HomeFragment : Fragment() {
     }
     private fun addSpinnerResolution():Spinner {
 
-
+        val streams = mediaInformation.mediaInformation.streams
+        var bitrateaux: Long? = null
+        // Select video stream (normally identified as "video")
+        for (stream in streams) {
+            if (stream.getStringProperty("codec_type") == "video") {
+                // Get the bitrate from the video stream
+                bitrateaux = stream.getStringProperty("bit_rate")?.toLongOrNull()
+            }
+        }
+        var videoHeight_aux = ""
+        var videoWidth_aux = ""
+        if (bitrateaux != null) {
+            when {
+                // If the bitrate is between 200 and 400 kbps
+                bitrateaux in 200_000..400_000 -> {
+                    videoWidth_aux = 426.toString()
+                    videoHeight_aux = 240.toString()
+                }
+                // If the bitrate is between 400 and 800 kbps
+                bitrateaux in 400_000..800_000 -> {
+                    videoWidth_aux = 640.toString()
+                    videoHeight_aux = 360.toString()
+                }
+                // If the bitrate is between 800 and 1500 kbps
+                bitrateaux in 800_000..1_500_000 -> {
+                    videoWidth_aux = 1280.toString()
+                    videoHeight_aux = 720.toString()
+                }
+                // If the bitrate is between 4000 and 10000 kbps
+                bitrateaux in 4_000_000..10_000_000 -> {
+                    videoWidth_aux = 1920.toString()
+                    videoHeight_aux = 1080.toString()
+                }
+                else -> {
+                    // If bitrate is outside the specified ranges
+                    println("El bitrate no está dentro de los rangos especificados")
+                }
+            }
+        } else {
+            println("El bitrate es null")
+        }
+        bitrate=bitrateaux.toString()
+        if (videoWidth_aux > videoWidth && videoHeight_aux > videoHeight){
+            videoWidth=videoWidth_aux
+            videoHeight=videoHeight_aux
+        }
         binding.spinner3.layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -2431,6 +2547,7 @@ If there is an error in the process, an error message is displayed to the user v
                         }
                         init75=initS*(1-0.75)
                         init40=initS*(1-0.4)
+                        init50=initS*(1-0.5)
                         init70=initS*(1-0.7)
 
                         if (initialSize != "") {
@@ -2440,9 +2557,11 @@ If there is an error in the process, an error message is displayed to the user v
                             {
                                 init75 /= 1000000
                                 init40 /= 1000000
+                                init50 /= 1000000
                                 init70 /= 1000000
                                 unidades75 = "MB"
                                 unidades40 = "MB"
+                                unidades50 = "MB"
                                 unidades70 = "MB"
                                 if (init75<1){
                                     init75 *= 1000
@@ -2451,6 +2570,10 @@ If there is an error in the process, an error message is displayed to the user v
                                 if (init40<1){
                                     init40 *= 1000
                                     unidades40 = "KB"
+                                }
+                                if (init50<1){
+                                    init50 *= 1000
+                                    unidades50 = "KB"
                                 }
                                 if (init70<1){
                                     init70 *= 1000
@@ -2461,6 +2584,7 @@ If there is an error in the process, an error message is displayed to the user v
                             {
                                 init75 /= 1000000000
                                 init40 /= 1000000000
+                                init50 /= 1000000000
                                 init70 /= 1000000000
                                 unidades75 = "GB"
                                 unidades40 = "GB"
@@ -2473,6 +2597,10 @@ If there is an error in the process, an error message is displayed to the user v
                                     init40 *= 1000
                                     unidades40 = "MB"
                                 }
+                                if (init50<1){
+                                    init50 *= 1000
+                                    unidades50 = "MB"
+                                }
                                 if (init70<1){
                                     init70 *= 1000
                                     unidades70 = "MB"
@@ -2483,6 +2611,7 @@ If there is an error in the process, an error message is displayed to the user v
                             {
                                 init75 /= 1000
                                 init40 /= 1000
+                                init50 /= 1000
                                 init70 /= 1000
                                 unidades75 = "KB"
                                 unidades40 = "KB"
@@ -2494,6 +2623,10 @@ If there is an error in the process, an error message is displayed to the user v
                                 if (init40<1){
                                     init40 *= 1000
                                     unidades40 = "B"
+                                }
+                                if (init50<1){
+                                    init50 *= 1000
+                                    unidades50 = "B"
                                 }
                                 if (init70<1){
                                     init70 *= 1000

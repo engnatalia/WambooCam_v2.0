@@ -25,6 +25,7 @@ import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.FFmpegKitConfig
 import com.arthenica.ffmpegkit.FFprobeKit
 import com.arthenica.ffmpegkit.ReturnCode
+import com.arthenica.ffmpegkit.SessionState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -68,7 +69,9 @@ class VideoCompressionService : Service() {
         val videoCodec =intent?.getStringExtra(ForegroundWorker.VIDEO_CODEC)
         val compressSpeed =intent?.getStringExtra(ForegroundWorker.COMPRESS_SPEED)
         val audio =intent?.getStringExtra(ForegroundWorker.VIDEO_AUDIO)
-        compressVideo(Uri.parse(videoUri), selectedtype.toString(),selectedformat.toString(), videoResolution, videoCodec, compressSpeed,audio)
+        val bitrate =intent?.getStringExtra(ForegroundWorker.BITRATE)
+
+        compressVideo(Uri.parse(videoUri), selectedtype.toString(),selectedformat.toString(), videoResolution, videoCodec, compressSpeed,audio,bitrate)
 
         return START_NOT_STICKY
     }
@@ -138,10 +141,26 @@ class VideoCompressionService : Service() {
         videoResolution: String?,
         videoCodec: String?,
         compressSpeed: String?,
-        audio: String?
+        audio: String?,
+        bitrate: String?
 
     ) {
+        val bitrateLong: Long? = bitrate?.toLongOrNull()
+        val bitrateDividido: Long? = bitrateLong?.div(1000)
 
+        val normalResolutionWidth = 1280 // "normal" width
+        val normalResolutionHeight = 720 // "normal" height
+
+// Divide the resolution between width and height
+        val resolutionParts = videoResolution?.split("x")
+        val videoWidth = resolutionParts!![0].toIntOrNull() ?: 0
+        val videoHeight = resolutionParts[1].toIntOrNull() ?: 0
+
+// Verify is the resolution is less than the "normal" value
+        val isResolutionLower = (videoWidth < normalResolutionWidth && videoHeight < normalResolutionHeight) ||
+                (videoWidth < normalResolutionHeight && videoHeight < normalResolutionWidth)
+
+        val bitrate: String? = bitrateDividido?.toString()
         val outPutSafeUri: String
         val command: String
         var uriPath: Uri? = null
@@ -255,7 +274,30 @@ class VideoCompressionService : Service() {
                         applicationContext,
                         videoUri
                     )
-                } -movflags faststart -c:v $videoCodec -crf 23 $audio -s $videoResolution -preset $compressSpeed $outPutSafeUri"
+                } -movflags +faststart -c:v $videoCodec -crf 23 $audio -s $videoResolution -preset $compressSpeed $outPutSafeUri"
+            }
+            getString(R.string.half) -> {
+                if (bitrate != null) {
+                    if (isResolutionLower) {
+                        command = "-y -i ${
+                            FFmpegKitConfig.getSafParameterForRead(applicationContext, videoUri)} " +
+                                "-movflags +faststart -c:v $videoCodec -crf 37 -b:v ${bitrate}k -maxrate ${bitrate}k " +
+                                "-bufsize ${bitrate.toLong() * 2}k -preset fast $outPutSafeUri"
+                    } else {
+                        command = "-y -i ${
+                            FFmpegKitConfig.getSafParameterForRead(applicationContext, videoUri)} " +
+                                "-movflags +faststart -c:v $videoCodec -crf 23 -b:v ${bitrate}k -maxrate ${bitrate}k " +
+                                "-bufsize ${bitrate.toLong() * 2}k -preset ultrafast $outPutSafeUri"
+                    }
+                }
+                else  {
+                    command = "-y -i ${
+                        FFmpegKitConfig.getSafParameterForRead(
+                            applicationContext,
+                            videoUri
+                        )
+                    } -movflags +faststart -c:v $videoCodec -crf 40 $audio -s $videoResolution -preset $compressSpeed $outPutSafeUri"
+                }
             }
             else -> {
                 command = "-y -i ${
@@ -263,7 +305,7 @@ class VideoCompressionService : Service() {
                         applicationContext,
                         videoUri
                     )
-                } -movflags faststart -c:v $videoCodec -crf 40 $audio -s $videoResolution -preset $compressSpeed $outPutSafeUri"
+                } -movflags +faststart -c:v $videoCodec -crf 40 $audio -s $videoResolution -preset $compressSpeed $outPutSafeUri"
             }
         }
 
@@ -274,7 +316,29 @@ class VideoCompressionService : Service() {
             { session ->
 
                 val returnCode = session.returnCode
+// Check if the command was correctly executed or there were an error
+                if (ReturnCode.isSuccess(returnCode)) {
+                    // Successful command
+                    println("Comando ejecutado exitosamente")
+                } else if (ReturnCode.isCancel(returnCode)) {
+                    // Cancelled command
+                    println("Comando cancelado por el usuario")
+                } else {
+                    // There were an error
+                    println("Error ejecutando FFmpeg:")
 
+                    // Capture session logs
+                    val sessionLogs = session.allLogsAsString
+                    println(sessionLogs)  // Show session logs in the console
+
+                    // Breakpoint here to analyze the logs in details
+                    // Breakpoint in this line to check the logs
+                    println("FFmpeg Error Logs:\n$sessionLogs")
+                }
+
+                // Final session state for debugging
+                val state: SessionState = session.state
+                println("Estado de la sesión: $state")
                 //initialSize = fileSize(videoUri.length(contentResolver))
                 val compressedSize = uriPath?.length(contentResolver)
                     ?.let { fileSize(it) }
