@@ -69,6 +69,7 @@ import com.google.android.ump.ConsentInformation.OnConsentInfoUpdateFailureListe
 import com.google.android.ump.ConsentInformation.OnConsentInfoUpdateSuccessListener
 import kotlin.system.exitProcess
 import android.graphics.Typeface
+import android.os.Build
 
 private const val REQUEST_PICK_VIDEO = 1
 private const val REQUEST_PICK_IMAGE = 1
@@ -86,6 +87,7 @@ class HomeFragment : Fragment() {
     private var formatsSpinner=arrayOf("")
     private var formatsValues=arrayOf("")
     private var spinner6:Spinner?=null
+    private var  fps =""
 
     private lateinit var pref: SharedPreferences
     private lateinit var editor: SharedPreferences.Editor
@@ -838,36 +840,51 @@ class HomeFragment : Fragment() {
 
 
     private fun checkCameraPermission() {
+        // Configura el lanzador para solicitar múltiples permisos
         val requestPermissionLauncher =
             registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) { isGranted: Boolean ->
-                if (isGranted) {
-                    Log.i("Permission: ", "Granted")
-                } else {
-                    Log.i("Permission: ", "Denied")
+                ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissions ->
+                permissions.entries.forEach { entry ->
+                    val permission = entry.key
+                    val isGranted = entry.value
+                    if (isGranted) {
+                        Log.i("Permission: ", "$permission Granted")
+                    } else {
+                        Log.i("Permission: ", "$permission Denied")
+                    }
                 }
             }
 
-        when {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED -> {
+        // Construye la lista de permisos a solicitar
+        val permissionsToRequest = mutableListOf<String>()
 
+        // Solicita el permiso de cámara si no ha sido concedido
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.CAMERA)
+        }
 
-                requestPermissionLauncher.launch(
-                    Manifest.permission.CAMERA,
-                )
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Para Android 13+ solicita permisos separados para imágenes y videos
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.READ_MEDIA_IMAGES)
+            }
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.READ_MEDIA_VIDEO)
+            }
+        } else {
+            // Para Android 12 e inferiores, solicita solo READ_EXTERNAL_STORAGE
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
             }
         }
 
-
-
-
-
+        // Lanza la solicitud de permisos si hay permisos en la lista
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        }
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -1439,7 +1456,8 @@ class HomeFragment : Fragment() {
                         .putString(ForegroundWorker.COMPRESS_SPEED, compressSpeed)
                         .putString(ForegroundWorker.VIDEO_CODEC, videoCodec)
                         .putString(ForegroundWorker.VIDEO_AUDIO, audio)
-                        .putString(ForegroundWorker.BITRATE, bitrate).build()
+                        .putString(ForegroundWorker.BITRATE, bitrate)
+                        .putString(ForegroundWorker.FPS, fps).build()
 
                 // Create the work request
                 val myWorkRequest =
@@ -1614,6 +1632,11 @@ class HomeFragment : Fragment() {
                     binding.instructions3.isVisible = false
                     binding.initImageSize.text = initImageSize
                     binding.finalImageSize.text = finalImageSize
+                    binding.imageReduction.text = buildString {
+                        append(reductionPercentage.toBigDecimal().setScale(2, RoundingMode.UP))
+                        append("%")
+                        append("\n")
+                    }
                     binding.minPollutionAvoided.text = buildString {
                         append(reductionPercentage.toBigDecimal().setScale(2, RoundingMode.UP))
                         append("%")
@@ -1964,15 +1987,27 @@ class HomeFragment : Fragment() {
 
         val streams = mediaInformation.mediaInformation.streams
         var bitrateaux: Long? = null
+        var fpsaux: String? = null
+        var videoRotation: Int? = null
+        var videoHeight_aux = ""
+        var videoWidth_aux = ""
+        var side : Long? = null
+
+
         // Select video stream (normally identified as "video")
         for (stream in streams) {
             if (stream.getStringProperty("codec_type") == "video") {
                 // Get the bitrate from the video stream
                 bitrateaux = stream.getStringProperty("bit_rate")?.toLongOrNull()
+                // Get the fps from the video stream
+                fpsaux = stream.getStringProperty("avg_frame_rate")
+                fps=fpsaux
+                //Get the video rotation (if present)
+                side = stream.getStringProperty("side_data_list")?.toLongOrNull()
+
             }
         }
-        var videoHeight_aux = ""
-        var videoWidth_aux = ""
+
         if (bitrateaux != null) {
             when {
                 // If the bitrate is between 200 and 400 kbps
@@ -1998,15 +2033,105 @@ class HomeFragment : Fragment() {
                 else -> {
                     // If bitrate is outside the specified ranges
                     println("El bitrate no está dentro de los rangos especificados")
+                    videoWidth_aux = videoWidth
+                    videoHeight_aux = videoHeight
                 }
             }
         } else {
             println("El bitrate es null")
         }
+
+        if (side != null) {
+            videoRotation = side.toString().substringAfter("rotation\":").substringBefore('}').toIntOrNull()
+        }
+        // Adjust rotation
+        if (videoRotation != null ) {
+            // If rotation is 90 or 270 degress, swap width and height
+            if (videoRotation == 90 || videoRotation == 270) {
+                val temp = videoWidth_aux
+                videoWidth_aux = videoHeight_aux
+                videoHeight_aux = temp
+            }
+        }
+
         bitrate=bitrateaux.toString()
-        if (videoWidth_aux > videoWidth && videoHeight_aux > videoHeight){
-            videoWidth=videoWidth_aux
-            videoHeight=videoHeight_aux
+
+// if width and height are smaller than original, update the values
+        if ((videoWidth_aux.toInt() < videoWidth.toInt() && videoHeight_aux.toInt() < videoHeight.toInt()) || (videoWidth_aux.toInt() < videoHeight.toInt() && videoHeight_aux.toInt() < videoWidth.toInt())) {
+
+            if (videoWidth <videoHeight && videoWidth_aux>videoHeight_aux) {
+                videoWidth = videoHeight_aux
+                videoHeight = videoWidth_aux
+            } else {
+                videoWidth = videoWidth_aux
+                videoHeight = videoHeight_aux
+            }
+        }
+        // Mapa que contiene la combinación de resoluciones y los bitrates máximos permitidos
+        val bitrateLimits = mapOf(
+            Pair("416", "234") to Pair(145000,24),
+            Pair("640", "360") to Pair(365000,24),
+            Pair("768", "432") to Pair(1100000,24),
+            Pair("960", "540") to Pair(2000000,fpsaux),
+            Pair("1280", "720") to Pair(4500000,fpsaux),
+            Pair("1920", "1080") to Pair(7800000, fpsaux)
+        )
+
+
+        fun findClosestResolution(width: Int, height: Int): Pair<String, String>? {
+            return bitrateLimits.keys.minByOrNull { (mapWidth, mapHeight) ->
+                // Calculamos la diferencia en área entre la resolución del video y las del mapa
+                val mapWidthInt = mapWidth.toIntOrNull() ?: 0
+                val mapHeightInt = mapHeight.toIntOrNull() ?: 0
+                Math.abs(mapWidthInt * mapHeightInt - width * height)
+            }
+        }
+        // Función para aplicar el límite de bitrate y retornar tanto el bitrate como el fps
+        fun applyBitrateLimit(width: String, height: String, currentBitrate: String): String {
+            val resolution = Pair(width, height)
+
+            // Check if there is an FPS limit for the specified resolution
+            bitrateLimits[resolution]?.let { (_, fpsValue) ->
+                return fpsValue.toString()
+            }
+
+            // Find closest resolution if exact resolution not found
+            val closestResolution = findClosestResolution(width.toInt(), height.toInt())
+            closestResolution?.let { (closestWidth, closestHeight) ->
+                val (_, fpsValue) = bitrateLimits[Pair(closestWidth.toString(), closestHeight.toString())] ?: return "30"
+                return fpsValue.toString()
+            }
+
+            // Default to 30 FPS if no match found
+            return "30"
+        }
+
+        // Función para verificar si el videoWidth o videoHeight coincide con la primera coordenada de algún par
+        fun checkWidthOrHeightMatch(width: String, height: String): String {
+            // Loop through the map to check if any dimension matches the first coordinate of the pair
+            for ((resolution, _) in bitrateLimits) {
+                if (resolution.first == width) {
+                    // Apply bitrate limit and get only FPS
+                    val fps = applyBitrateLimit(width, height, bitrate)
+                    return fps.toString()
+                } else if (resolution.first == height) {
+                    val fps = applyBitrateLimit(height, width, bitrate) // For rotated dimensions
+                    return fps.toString()
+                }
+            }
+
+            // Default to fpsaux if no match found
+            return fpsaux.toString()
+        }
+
+
+// Ejemplo de uso
+        val fps = checkWidthOrHeightMatch(videoWidth, videoHeight)
+
+        if (fps != fpsaux) {
+            println("FPS ha cambiado.")
+        } else {
+            println("Se mantiene el FPS original")
         }
         binding.spinner3.layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
