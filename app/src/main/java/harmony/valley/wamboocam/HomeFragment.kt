@@ -70,6 +70,9 @@ import com.google.android.ump.ConsentInformation.OnConsentInfoUpdateSuccessListe
 import kotlin.system.exitProcess
 import android.graphics.Typeface
 import android.os.Build
+import android.text.Spannable
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 
 private const val REQUEST_PICK_VIDEO = 1
 private const val REQUEST_PICK_IMAGE = 1
@@ -1635,14 +1638,39 @@ class HomeFragment : Fragment() {
                     binding.imageReduction.text = buildString {
                         append(reductionPercentage.toBigDecimal().setScale(2, RoundingMode.UP))
                         append("%")
-                        append("\n")
                     }
-                    binding.minPollutionAvoided.text = buildString {
-                        append(reductionPercentage.toBigDecimal().setScale(2, RoundingMode.UP))
-                        append("%")
-                        append("\n")
-                        append(getString(R.string.congrats))
-                    }
+                    val pollutionText = getString(R.string.pollution_avoided) // Texto de encabezado
+                    val percentageText = "${reductionPercentage.toBigDecimal().setScale(2, RoundingMode.UP)}%" // Porcentaje
+                    val congratsText = "\n${getString(R.string.congrats)}" // Texto de felicitación
+
+// Create SpannableString with all the content
+                    val spannableString = SpannableString("$pollutionText $percentageText$congratsText")
+                    val militaryGreen = ContextCompat.getColor(requireContext(), R.color.teal_teal)
+// Apply bold and black color to the header
+                    spannableString.setSpan(
+                        StyleSpan(Typeface.BOLD), // bold
+                        0, // start of the style
+                        pollutionText.length, // end of the bold
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    spannableString.setSpan(
+                        ForegroundColorSpan(Color.BLACK), // black colour
+                        0,
+                        pollutionText.length,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+
+// apply green colour to the result and congrats message
+                    spannableString.setSpan(
+                        ForegroundColorSpan(militaryGreen), // green colour
+                        pollutionText.length + 1, // Start after the header and the space
+                        spannableString.length, // end of green colour
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+
+                    binding.minPollutionAvoided.text = spannableString
+
+
                 } else {
                     // Code for zero image size
                     binding.statsContainer2.visibility = View.VISIBLE

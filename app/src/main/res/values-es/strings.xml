@@ -99,7 +99,7 @@
     <string name="share_compressed_image">Comparte la imagen comprimida</string>
     <string name="compress_image">Comprime la imagen</string>
     <string name="delete_image">Borra imagen no comprimida</string>
-    <string name="pollution_avoided">Contaminación evitada:</string>
+    <string name="pollution_avoided">Reducción de contaminación por almacenamiento comprimido:</string>
     <string name="no_bat_set">Configuración de la batería mo encontrada. Por favor, habilita manualmente la función de segundo plano en la configuración de tu teléfono</string>
     <string name="open_wamboo">Ups! Algo fuer mal, pero tu vídeo se grabó! Usa Wamboo para comprimirlo.</string>
     <string name="h265_3gp">No es posible comprimir 3gp con H.265, cambiado a H.264</string>

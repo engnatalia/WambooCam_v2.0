@@ -221,7 +221,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
-                        android:text="@string/pollution_avoided"
+                        android:text="@string/reduction"
                         android:textColor="@android:color/black"
                         android:textStyle="bold" />
 
@@ -235,28 +235,21 @@
 
                 </LinearLayout>
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
+                    <!-- TextView for the header, % and menssage -->
                     <TextView
+                        android:id="@+id/minPollutionAvoided"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
-                        android:text="@string/pollution_avoided"
                         android:textColor="@android:color/black"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/minPollutionAvoided"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:textFontWeight="300"
-                        android:textColor="@android:color/black"/>
-
+                        android:textFontWeight="300"/>
                 </LinearLayout>
+
             </LinearLayout>
             <CheckBox android:id="@+id/checkbox_audio"
                 android:layout_width="wrap_content"
