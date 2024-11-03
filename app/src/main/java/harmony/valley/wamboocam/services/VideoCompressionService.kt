@@ -71,7 +71,8 @@ class VideoCompressionService : Service() {
         val audio =intent?.getStringExtra(ForegroundWorker.VIDEO_AUDIO)
         val bitrate =intent?.getStringExtra(ForegroundWorker.BITRATE)
         val fps =intent?.getStringExtra(ForegroundWorker.FPS)
-        compressVideo(Uri.parse(videoUri), selectedtype.toString(),selectedformat.toString(), videoResolution, videoCodec, compressSpeed,audio,bitrate,fps)
+        val userSelectedFps =intent?.getStringExtra(ForegroundWorker.SELECTED_FPS)
+        compressVideo(Uri.parse(videoUri), selectedtype.toString(),selectedformat.toString(), videoResolution, videoCodec, compressSpeed,audio,bitrate,fps,userSelectedFps)
 
         return START_NOT_STICKY
     }
@@ -143,7 +144,8 @@ class VideoCompressionService : Service() {
         compressSpeed: String?,
         audio: String?,
         bitrate: String?,
-        fps: String?
+        fps: String?,
+        userSelectedFps: String?
 
     ) {
         val bitrateLong: Long? = bitrate?.toLongOrNull()
@@ -279,23 +281,19 @@ class VideoCompressionService : Service() {
             // Custom high-quality compression with conditional FPS and resolution handling
             getString(R.string.custom_h) -> {
                 val inputParameter = FFmpegKitConfig.getSafParameterForRead(applicationContext, videoUri)
-                val includeFps = (parseFractionalFps(fpsaux) ?: 0.0) <= (parseFractionalFps(fps) ?: 0.0)
+                // Use user-selected FPS if it is less than or equal to the original FPS, otherwise use original logic
+                val selectedFps = if ((userSelectedFps?.toDouble() ?: 0.0) <= (parseFractionalFps(fps) ?: 0.0)) userSelectedFps else fpsaux
+                val fpsOption = selectedFps?.let { "-r $it " } ?: ""
 
                 command = when {
-                    isResolutionLower && includeFps -> {
-                        "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 37 $audio -r $fpsaux -preset $compressSpeed $outPutSafeUri"
-                    }
                     isResolutionLower -> {
-                        "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 37 $audio -preset $compressSpeed $outPutSafeUri"
-                    }
-                    isResolutionHigher && includeFps -> {
-                        "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 23 $audio -s $videoResolution -r $fpsaux -preset $compressSpeed $outPutSafeUri"
+                        "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 37 $audio $fpsOption-preset $compressSpeed $outPutSafeUri"
                     }
                     isResolutionHigher -> {
-                        "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 23 $audio -s $videoResolution -preset $compressSpeed $outPutSafeUri"
+                        "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 23 $audio -s $videoResolution $fpsOption-preset $compressSpeed $outPutSafeUri"
                     }
                     else -> {
-                        "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 25 $audio -preset $compressSpeed $outPutSafeUri"
+                        "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 25 $audio $fpsOption-preset $compressSpeed $outPutSafeUri"
                     }
                 }
             }
@@ -323,8 +321,11 @@ class VideoCompressionService : Service() {
             // Default case with optional resolution setting
             else -> {
                 val inputParameter = FFmpegKitConfig.getSafParameterForRead(applicationContext, videoUri)
+                val selectedFps = if ((userSelectedFps?.toDouble() ?: 0.0) <= (parseFractionalFps(fps) ?: 0.0)) userSelectedFps else null
+                val fpsOption = selectedFps?.let { "-r $it " } ?: ""
+
                 command = "-y -i $inputParameter -movflags +faststart -c:v $videoCodec -crf 40 $audio " +
-                        "${if (isResolutionHigher) "" else "-s $videoResolution "} -preset $compressSpeed $outPutSafeUri"
+                        "${if (isResolutionHigher) "" else "-s $videoResolution "} $fpsOption-preset $compressSpeed $outPutSafeUri"
             }
         }
 
