@@ -32,7 +32,7 @@ Because of all this, and since I had neither the **time to do it myself** nor th
 
 - Simple **eco video & photo camera** 📸🎥
 - Helps save storage & reduce power consumption 🌱
-- Saves space while keeping **video & image quality** intact 💾✨
+- Option to **save space without losing video & image quality** 💾✨
 
 ---
 
@@ -44,6 +44,7 @@ If you want to contribute, here are directions I envisioned:
 - Ensure support for **16 KB memory pages** 🛠️
 - Improve UI & design ✨
 - Add new compression or recording options 🔧
+- Support new eco-compression methods ⚡
 - Add new metrics for **measuring power consumption and associated pollution** ⚡🌍
 - Or simply… add **any improvements you imagine** 🚀
 
